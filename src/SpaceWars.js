@@ -1,42 +1,42 @@
 
 const ipcRenderer = require('electron').ipcRenderer;
-console.log(ipcRenderer.sendSync('synchronous-message', 'reload'))
 
-window.onkeypressed = (e) => {
-  if (String.fromCharCode(e.keyCode) == 'r') {
-    ipcRenderer.send('asynchronous-message', 'ping')
-  }
-}
+window.addEventListener('keydown', function(e) {
+  if (e.key == 'r')
+    ipcRenderer.send('asynchronous-message', 'ping');
+});
 
-window.onload = () => {
-  console.log("asdf");
-}
-
+var graphics;
+var stage;
+var renderer;
 window.onload = () => {
   width = window.innerWidth;
   height = window.innerHeight;
-  var renderer = new PIXI.WebGLRenderer(width, height);
+  renderer = new PIXI.WebGLRenderer(width, height);
 
   renderer.autoResize = true;
   document.body.appendChild(renderer.view);
+  stage = new PIXI.Container();
+  graphics = new PIXI.Graphics();
 
-  var stage = new PIXI.Container();
-
-
-  var graphics = new PIXI.Graphics();
-
-  graphics.beginFill(0xFFFF00);
+  graphics.beginFill(0xC0FFEE);
 
   // draw a rectangle
   graphics.drawRect(0, 0, 32, 32);
+
 
   stage.addChild(graphics);
 
   graphics.x = 100;
   graphics.y = 200;
 
-  renderer.render(stage);
-
-  console.log(window);
+  gameloop();
 
 };
+
+function gameloop() {
+  requestAnimationFrame(gameloop);
+
+  graphics.x += 5;
+  renderer.render(stage);
+}

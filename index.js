@@ -27,6 +27,8 @@ app.on('ready', ()=> {
     window.show();
   });
 
+  //window.show();
+
   window.loadURL('file:///' + __dirname + '/index.html');
 
 });

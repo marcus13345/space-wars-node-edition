@@ -8,4 +8,8 @@ class Gameobject {
   addScript(newScript) {
     this.scripts.push(newScript);
   }
+
+  static findObjectByID(id) {
+    // for()
+  }
 }

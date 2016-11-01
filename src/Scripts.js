@@ -22,6 +22,4 @@ class RectRenderer extends Script {
   constructor() {
     this.color = 0x000000;
   }
-
-
 }
