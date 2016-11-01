@@ -1,15 +1,29 @@
+/* jshint esversion: 6 */
+
 class Gameobject {
   constructor() {
-    this.scripts = [];
-    this.Tranform = new Tranform();
-    addScript(this.Tranform);
+    this._scripts = [];
+    this._transform = new Transform();
+    this.addScript(this._transform);
+  }
+
+  get transform() {
+    return this._transform;
   }
 
   addScript(newScript) {
-    this.scripts.push(newScript);
+    this._scripts.push(newScript);
   }
 
   static findObjectByID(id) {
-    // for()
+    if(id in SceneManager.IDTable)
+      return SceneManager.IDTable[id];
+    else return null;
+  }
+
+  update() {
+    this._scripts.forEach( (script) => {
+      script.update();
+    });
   }
 }

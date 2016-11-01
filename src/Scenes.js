@@ -1,27 +1,52 @@
-
+/* jshint esversion: 6 */
 
 class SceneManager {
 
   static get scene() {
-    return _scene;
+    return SceneManager._scene;
+  }
+
+  static get stage() {
+    return SceneManager._stage;
+  }
+
+  static set self(value) {
+    SceneManager._self = value;
+  }
+
+  static get IDTable() {
+    return SceneManager._IDs;
   }
 
   static loadScene(config) {
-    for(var gameobject in config) {
-      console.log("asdf");
-    }
+    SceneManager.scene = SceneManager.parseScene(config);
   }
 
-  static initialize() {
-    this._self = new SceneManager();
+  static parseScene(config) {
+    config.forEach( (jsonGameobject) => {
+      console.log(jsonGameobject);
+      var gameobject = new Gameobject();
+      gameobject.transform.x = jsonGameobject.x;
+      gameobject.transform.y = jsonGameobject.y;
+      SceneManager._scene.push(gameobject);
+      SceneManager._IDs[jsonGameobject.ID] = gameobject;
+      gameobject.class = jsonGameobject.Class;
+      jsonGameobject.Scripts.forEach( (jsonScript) => {
+        var scriptObject = new global.scripts[jsonScript.Entity]();
+        scriptObject.transform = gameobject.transform;
+        gameobject.addScript(scriptObject);
+      });
+    });
   }
 
   constructor() {
-    this._scene
+    SceneManager._scene = [];
+    SceneManager._stage = new PIXI.Container();
+    SceneManager._IDs = {};
   }
 }
 
-SceneManager.initialize();
+SceneManager.self = new SceneManager();
 
 SceneManager.loadScene([
   { //this is a gameobject
@@ -29,14 +54,9 @@ SceneManager.loadScene([
     "Name": "Player",
     "ID": "Player",
     "Class": [],
+    "x": 500,
+    "y": 300,
     "Scripts": [ //self explanitory
-      {
-        "Entity": "Transform", //a transform
-        "Properties": { // with some properties
-          "x": 500,
-          "y": 300
-        }
-      },
       {
         "Entity": "RectRenderer", //this one puts a rectangle on the screen
         "Properties": { //with properties
@@ -45,6 +65,46 @@ SceneManager.loadScene([
           "color": 0x0af9c7
         }
       }
+    ],
+    "Children": [
+      { //this is a gameobject
+        "Entity": "GameObject", //regular gameobject, nothing amazing. where you would place a prefab name.
+        "Name": "Enemy",
+        "ID": "",
+        "Class": ["Enemy"],
+        "x": 600,
+        "y": 300,
+        "Scripts": [ //self explanitory
+          {
+            "Entity": "RectRenderer", //this one puts a rectangle on the screen
+            "Properties": { //with properties
+              "width": 16,
+              "height": 16,
+              "color": 0x45e1fc
+            }
+          }
+        ]
+      },
+
+      { //this is a gameobject
+        "Entity": "GameObject", //regular gameobject, nothing amazing. where you would place a prefab name.
+        "Name": "Enemy",
+        "ID": "",
+        "Class": ["Enemy"],
+        "x": 700,
+        "y": 300,
+        "Scripts": [ //self explanitory
+          {
+            "Entity": "RectRenderer", //this one puts a rectangle on the screen
+            "Properties": { //with properties
+              "width": 16,
+              "height": 16,
+              "color": 0x45e1fc
+            }
+          }
+        ]
+      }
+
     ]
   }
 ]);
