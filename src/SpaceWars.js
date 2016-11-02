@@ -13,6 +13,9 @@ var renderer;
 window.onload = () => {
   width = window.innerWidth;
   height = window.innerHeight;
+  global.viewport = {};
+  global.viewport.width = width;
+  global.viewport.height = height;
   renderer = new PIXI.WebGLRenderer(width, height);
 
   renderer.autoResize = true;

@@ -123,6 +123,7 @@ registerScript(
 
     start() {
       this.rb = this.getComponent('RigidBody');
+      this.renderer = this.getComponent('RectRenderer');
       // console.log(this.rb);
       //this.rb.applyForce([20, 0]);
     }
@@ -143,6 +144,22 @@ registerScript(
       else if(a && !d)
         this.rb.applyForce([-1, 0]);
 
+
+      if(this.transform.x < 0) {
+        this.rb.applyForce([1.2, 0]);
+        this.outOfBounds = true;
+      }else if(this.transform.x + this.renderer.width > global.viewport.width){
+        this.rb.applyForce([-1.2, 0]);
+        this.outOfBounds = true;
+      }
+
+      if(this.transform.y < 0) {
+        this.rb.applyForce([0, 1.2]);
+        this.outOfBounds = true;
+      }else if(this.transform.y + this.renderer.height > global.viewport.height){
+        this.rb.applyForce([0, -1.2]);
+        this.outOfBounds = true;
+      }
     }
   }
 ); // PlayerController
