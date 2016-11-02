@@ -11,6 +11,19 @@ class Gameobject {
     return this._transform;
   }
 
+  get scripts() {
+    return this._scripts;
+  }
+
+  getComponent(type) {
+    var match = null;
+    this._scripts.forEach((value) => {
+      if (type == value.__proto__.constructor.name)
+        match = value;
+    });
+    return match;
+  }
+
   addScript(newScript) {
     this._scripts.push(newScript);
   }

@@ -18,6 +18,14 @@ window.onload = () => {
   renderer.autoResize = true;
   document.body.appendChild(renderer.view);
 
+  window.addEventListener('keydown', function(e) {
+    Keyboard.keys[e.keyCode] = true;
+  });
+
+  window.addEventListener('keyup', function(e) {
+    Keyboard.keys[e.keyCode] = false;
+  });
+
   gameloop();
 
 };
@@ -25,15 +33,28 @@ window.onload = () => {
 function gameloop() {
   requestAnimationFrame(gameloop);
 
-  for(var i in SceneManager.scene) {
-    // console.log(go);
-    var v = SceneManager.scene[i];
-    v.update();
-  }
+  SceneManager.stage.children.sort((a, b) => {
+    var c = SceneManager.getLayerDepth(a.renderer.renderLayer),
+        d = SceneManager.getLayerDepth(b.renderer.renderLayer);
+
+    if(c == d) return 0;
+    else if(c > d) return 1;
+    else return -1;
+  });
+  SceneManager.scene.forEach((value) => {
+    value.update();
+  });
 
   renderer.render(SceneManager.stage);
 }
 
-class Poop {
-
+var Keyboard = {
+  keys: [],
+  getKeyCodeDown: function(code) {
+    return this.keys[code];
+  },
+  getKeyDown: function(character) {
+    return this.getKeyCodeDown(character.toUpperCase().charCodeAt(0));
+  }
 }
+for(var i = 0; i < 256; i ++) Keyboard.keys.push(false);
