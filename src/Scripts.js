@@ -163,3 +163,18 @@ registerScript(
     }
   }
 ); // PlayerController
+
+registerScript(class EnemySpawner extends Script {
+  constructor() {
+    super();
+    this.spawner = null;
+  }
+
+  start() {
+    this.spawner = setTimeout(this.spawnEnemy, 1000);
+  }
+
+  spawnEnemy() {
+    SceneManager.loadPrefab("Enemy");
+  }
+});

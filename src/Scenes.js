@@ -18,12 +18,30 @@ class SceneManager {
     return SceneManager._IDs;
   }
 
+  static loadPrefab(prefab, parent) {
+    var gameobject = SceneManager.parseScene([{
+      "Entity": prefab
+    }]);
+
+    if(parent !== undefined) {
+      gameobject.parent = parent;
+      parent.children.push(gameobject);
+    }else {
+      gameobject.parent = null;
+      SceneManager._scene.push(gameobject);
+    }
+
+  }
+
   static loadScene(config) {
-    SceneManager._scene = SceneManager.parseScene(config, null);
+    //if this is a strign reference to a scene we already loaded, load that.
+    if(typeof(config) === 'string')
+      config = global.scenes[config];
+    SceneManager._scene = SceneManager.parseScene(config, null).global;
     SceneManager._scene.forEach((go) => {
       go.scripts.forEach( (script) => {
         script.start();
-      })
+      });
     });
   }
 
@@ -36,32 +54,62 @@ class SceneManager {
   }
 
   static parseScene(config, parent) {
-    var result = [];
+    var result = {global: [], local: []};
+
     config.forEach( (jsonGameobject) => {
-      var gameobject = new Gameobject();
-      gameobject.transform.x = jsonGameobject.x;
-      gameobject.transform.y = jsonGameobject.y;
-      result.push(gameobject);
-      SceneManager._IDs[jsonGameobject.ID] = gameobject;
-      gameobject.class = jsonGameobject.Class;
-      jsonGameobject.Scripts.forEach( (jsonScript) => {
-        var scriptObject = new global.scripts[jsonScript.Entity]();
-        scriptObject.transform = gameobject.transform;
-        scriptObject.gameobject = gameobject;
-        gameobject.addScript(scriptObject);
-        for(var value in jsonScript.Properties) {
-          if(jsonScript.Properties.hasOwnProperty(value))
-            scriptObject[value] = jsonScript.Properties[value]
-        }
-        scriptObject
-      });
+      var gameobject, nextLevel;
+      if(jsonGameobject.Entity.toUpperCase() != "GAMEOBJECT") {
+        nextLevel = this.parseScene([global.prefabs[jsonGameobject.Entity]]);
+        gameobject = nextLevel.local[0];
+      } else {
+        gameobject = new Gameobject();
+        SceneManager._IDs[jsonGameobject.ID] = gameobject;
+        gameobject.class = jsonGameobject.Class;
+
+        //for each script in config
+        jsonGameobject.Scripts.forEach( (jsonScript) => {
+          //make the script object
+          var scriptObject = new global.scripts[jsonScript.Entity]();
+
+          //inject some data
+          scriptObject.transform = gameobject.transform;
+          scriptObject.gameobject = gameobject;
+
+          //add script to the object
+          gameobject.addScript(scriptObject);
+
+          // go over the properties in the config
+          for(var value in jsonScript.Properties) {
+            if(jsonScript.Properties.hasOwnProperty(value))
+              // and set them on the script
+              scriptObject[value] = jsonScript.Properties[value];
+          }
+          //scriptObject
+        });
+        gameobject.parent = parent;
+      }
+
+      if('x' in jsonGameobject)
+        gameobject.transform.x = jsonGameobject.x;
+      else
+        gameobject.transform.x = 0;
+
+      if('y' in jsonGameobject)
+        gameobject.transform.y = jsonGameobject.y;
+      else
+        gameobject.transform.y = 0;
+
+      //add the current gameobject to both our local and global scoped arrays
+      result.local.push(gameobject);
+      result.global.push(gameobject);
+
       if('Children' in jsonGameobject) {
-        gameobject.children = SceneManager.parseScene(jsonGameobject.Children, gameobject);
-        gameobject.children.forEach((value) => {
-          result.push(value);
+        nextLevel = SceneManager.parseScene(jsonGameobject.Children, gameobject);
+        gameobject.children = nextLevel.local;
+        nextLevel.global.forEach((value) => {
+          result.global.push(value);
         });
       }
-      gameobject.parent = parent;
     });
     return result;
   }
@@ -74,81 +122,11 @@ class SceneManager {
 }
 SceneManager.self = new SceneManager();
 
+global.scenes = {};
+function registerScene(name, scene) {
+  global.scenes[name] = scene;
+}
 
-// ================= Scene Loading =================
-
-SceneManager.loadScene([
-  { //this is a gameobject
-    "Entity": "GameObject", //regular gameobject, nothing amazing. where you would place a prefab name.
-    "Name": "Background",
-    "ID": "Background",
-    "Class": [],
-    "x": 0,
-    "y": 0,
-    "Scripts": [ //self explanitory
-      {
-        "Entity": "SpriteRenderer", //this one puts a rectangle on the screen
-        "Properties": { //with properties
-          // "url": "http://wallpaperstyle.com/web/wallpapers/hot-girl/1280x720.jpg",
-          "url": "http://wallpapercave.com/wp/6K44j5E.jpg",
-          "color": 0x333333,
-          "renderLayer": "Background"
-        }
-      }
-    ]
-  },
-  { //this is a gameobject
-    "Entity": "GameObject", //regular gameobject, nothing amazing. where you would place a prefab name.
-    "Name": "Player",
-    "ID": "Player",
-    "Class": [],
-    "x": 631,
-    "y": 740,
-    "Scripts": [ //self explanitory
-      {
-        "Entity": "RectRenderer", //this one puts a rectangle on the screen
-        "Properties": { //with properties
-          "width": 16,
-          "height": 16,
-          "color": 0x0af9c7
-        }
-      },
-      {
-        "Entity": 'RigidBody',
-        "Properties": {
-          'dy': -15
-        }
-      },
-      {
-        "Entity": 'PlayerController',
-        "Properties": {
-
-        }
-      }
-    ]
-  },
-  { //this is a gameobject
-    "Entity": "GameObject", //regular gameobject, nothing amazing. where you would place a prefab name.
-    "Name": "Enemy",
-    "ID": "",
-    "Class": ["Enemy"],
-    "x": 700,
-    "y": 300,
-    "Scripts": [ //self explanitory
-      {
-        "Entity": "RectRenderer", //this one puts a rectangle on the screen
-        "Properties": { //with properties
-          "width": 16,
-          "height": 16,
-          "color": 0x45e1fc
-        }
-      }
-    ]
-  }
-]);
-
-SceneManager.defineLayers({
-  "Default": 1,
-  "Background": 0,
-  "Entities": 2
-});
+function defineRenderLayers(layers) {
+  SceneManager.defineLayers(layers);
+}
