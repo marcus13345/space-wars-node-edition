@@ -34,9 +34,17 @@ class Gameobject {
     else return null;
   }
 
+  start() {
+    this._scripts.forEach( (script) => {
+      if('start' in script)
+        script.start();
+    });
+  }
+
   update() {
     this._scripts.forEach( (script) => {
-      script.update();
+      if('update' in script)
+        script.update();
     });
   }
 }

@@ -1,5 +1,68 @@
 /* jshint esversion: 6 */
 
+registerScript(class PlayerController extends Script{
+  constructor() {
+    super();
+    this.rb = {};
+  }
+
+  start() {
+    this.rb = this.getComponent('RigidBody');
+    this.renderer = this.getComponent('RectRenderer');
+    // console.log(this.rb);
+    //this.rb.applyForce([20, 0]);
+  }
+
+  update() {
+    var w = Keyboard.getKeyDown('w');
+    var a = Keyboard.getKeyDown('a');
+    var s = Keyboard.getKeyDown('s');
+    var d = Keyboard.getKeyDown('d');
+
+    if(w && !s)
+      this.rb.applyForce([0, -1]);
+    else if(s && !w)
+      this.rb.applyForce([0, 1]);
+
+    if(d && !a)
+      this.rb.applyForce([1, 0]);
+    else if(a && !d)
+      this.rb.applyForce([-1, 0]);
+
+
+    if(this.transform.x < 0) {
+      this.rb.applyForce([1.2, 0]);
+      this.outOfBounds = true;
+    }else if(this.transform.x + this.renderer.width > global.viewport.width){
+      this.rb.applyForce([-1.2, 0]);
+      this.outOfBounds = true;
+    }
+
+    if(this.transform.y < 0) {
+      this.rb.applyForce([0, 1.2]);
+      this.outOfBounds = true;
+    }else if(this.transform.y + this.renderer.height > global.viewport.height){
+      this.rb.applyForce([0, -1.2]);
+      this.outOfBounds = true;
+    }
+  }
+});
+
+registerScript(class EnemySpawner extends Script {
+  constructor() {
+    super();
+    this.spawner = null;
+  }
+
+  start() {
+    this.spawner = setTimeout(this.spawnEnemy, 1000);
+  }
+
+  spawnEnemy() {
+    SceneManager.loadPrefab("Enemy");
+  }
+});
+
 registerPrefab('Enemy', {
   "Entity": "Gameobject",
   "Scripts": [
@@ -13,7 +76,6 @@ registerPrefab('Enemy', {
     }
   ]
 });
-
 
 registerScene('level1', [
   { // the background
@@ -66,10 +128,13 @@ registerScene('level1', [
     ]
   },
   { //this is a gameobject
-    "Entity": "Enemy", //regular gameobject, nothing amazing. where you would place a prefab name.
-    "Name": "Enemy",
-    "x": 100,
-    "y": 100
+    "Entity": "gameobject", //regular gameobject, nothing amazing. where you would place a prefab name.
+    "Name": "Enemy Spawner",
+    "Scripts": [
+      {
+        "Entity": "EnemySpawner"
+      }
+    ]
   }
 ]);
 registerScene('ParentingTest', [

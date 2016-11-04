@@ -19,18 +19,25 @@ class SceneManager {
   }
 
   static loadPrefab(prefab, parent) {
-    var gameobject = SceneManager.parseScene([{
+    var parsedObject = SceneManager.parseScene([{
       "Entity": prefab
     }]);
+    var gameobject = parsedObject.local[0];
 
     if(parent !== undefined) {
       gameobject.parent = parent;
-      parent.children.push(gameobject);
     }else {
       gameobject.parent = null;
-      SceneManager._scene.push(gameobject);
     }
 
+    parsedObject.global.forEach((value) => {
+      if(parent !== undefined)
+        parent.children.push(value);
+      else
+        SceneManager._scene.push(value);
+    });
+
+    gameobject.start();
   }
 
   static loadScene(config) {
@@ -66,26 +73,27 @@ class SceneManager {
         SceneManager._IDs[jsonGameobject.ID] = gameobject;
         gameobject.class = jsonGameobject.Class;
 
-        //for each script in config
-        jsonGameobject.Scripts.forEach( (jsonScript) => {
-          //make the script object
-          var scriptObject = new global.scripts[jsonScript.Entity]();
+        if('Scripts' in jsonGameobject)
+          //for each script in config
+          jsonGameobject.Scripts.forEach( (jsonScript) => {
+            //make the script object
+            var scriptObject = new global.scripts[jsonScript.Entity]();
 
-          //inject some data
-          scriptObject.transform = gameobject.transform;
-          scriptObject.gameobject = gameobject;
+            //inject some data
+            scriptObject.transform = gameobject.transform;
+            scriptObject.gameobject = gameobject;
 
-          //add script to the object
-          gameobject.addScript(scriptObject);
+            //add script to the object
+            gameobject.addScript(scriptObject);
 
-          // go over the properties in the config
-          for(var value in jsonScript.Properties) {
-            if(jsonScript.Properties.hasOwnProperty(value))
-              // and set them on the script
-              scriptObject[value] = jsonScript.Properties[value];
-          }
-          //scriptObject
-        });
+            // go over the properties in the config
+            for(var value in jsonScript.Properties) {
+              if(jsonScript.Properties.hasOwnProperty(value))
+                // and set them on the script
+                scriptObject[value] = jsonScript.Properties[value];
+            }
+            //scriptObject
+          });
         gameobject.parent = parent;
       }
 

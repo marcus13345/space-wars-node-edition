@@ -45,7 +45,8 @@ function gameloop() {
     else return -1;
   });
   SceneManager.scene.forEach((value) => {
-    value.update();
+    if('update' in value)
+      value.update();
   });
 
   renderer.render(SceneManager.stage);
