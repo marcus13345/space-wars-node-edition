@@ -62,3 +62,58 @@ var Keyboard = {
   }
 }
 for(var i = 0; i < 256; i ++) Keyboard.keys.push(false);
+
+class Vec2 {
+  constructor(x, y) {
+    this.val = [x, y];
+  }
+
+  subtract(vec) {
+    return new Vec2(this.x - vec.x, this.y - vec.y);
+  }
+
+  scale(factor) {
+    // console.log(factor, this.x, this.y);
+    return new Vec2(this.x * factor, this.y * factor);
+  }
+
+  get x() {
+    // console.log(new Error().stack);
+    return this.val[0];
+  }
+
+  get y() {
+    // console.log(new Error().stack);
+    return this.val[1];
+  }
+  
+  set x(value) {
+    // console.log(new Error().stack);
+    this.val[0] = value;
+  }
+
+  set y(value) {
+    // console.log(new Error().stack);
+    this.val[1] = value;
+  }
+
+  static get up() {
+    return new Vec2(0, -1);
+  }
+
+  static get down() {
+    return new Vec2(0, 1);
+  }
+
+  static get left() {
+    return new Vec2(-1, 0);
+  }
+
+  static get right() {
+    return new Vec2(1, 0);
+  }
+
+  reverse() {
+    return new Vec2(-this.x, -this.y);
+  }
+}

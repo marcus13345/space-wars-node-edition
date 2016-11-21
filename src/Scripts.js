@@ -21,8 +21,8 @@ function registerScript(myClass) {
 class Transform extends Script {
   constructor() {
     super();
-    this.x = 0;
-    this.y = 0;
+    // debugger;
+    this.position = new Vec2(0, 0);
   }
 }
 
@@ -45,8 +45,9 @@ registerScript(
     }
 
     update() {
-      this.graphics.x = this.transform.x;
-      this.graphics.y = this.transform.y;
+      // console.log(this);
+      this.graphics.x = this.transform.position.x;
+      this.graphics.y = this.transform.position.y;
     }
   }
 ); // RectRenderer
@@ -80,8 +81,8 @@ registerScript(
     }
 
     update() {
-      this.graphics.x = this.transform.x;
-      this.graphics.y = this.transform.y;
+      this.graphics.x = this.transform.position.x;
+      this.graphics.y = this.transform.position.y;
     }
   }
 ); // SpriteRenderer
@@ -98,16 +99,16 @@ registerScript(
     }
 
     update() {
-      this.transform.x += this.dx;
-      this.transform.y += this.dy;
+      this.transform.position.x += this.dx;
+      this.transform.position.y += this.dy;
 
       this.dx /= this.drag;
       this.dy /= this.drag;
     }
 
     applyForce(force) {
-      this.dx += force[0];
-      this.dy += force[1];
+      this.dx += force.x;
+      this.dy += force.y;
     }
   }
 ); // RigidBody

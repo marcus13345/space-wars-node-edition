@@ -1,5 +1,7 @@
 /* jshint esversion: 6 */
 
+
+
 registerScript(class PlayerController extends Script{
   constructor() {
     super();
@@ -20,34 +22,52 @@ registerScript(class PlayerController extends Script{
     var d = Keyboard.getKeyDown('d');
 
     if(w && !s)
-      this.rb.applyForce([0, -1]);
+      this.rb.applyForce(Vec2.up);
     else if(s && !w)
-      this.rb.applyForce([0, 1]);
+      this.rb.applyForce(Vec2.down);
 
     if(d && !a)
-      this.rb.applyForce([1, 0]);
+      this.rb.applyForce(Vec2.right);
     else if(a && !d)
-      this.rb.applyForce([-1, 0]);
+      this.rb.applyForce(Vec2.left);
 
 
-    if(this.transform.x < 0) {
-      this.rb.applyForce([1.2, 0]);
+    if(this.transform.position.x < 0) {
+      this.rb.applyForce(Vec2.right.scale(1.2));
       this.outOfBounds = true;
-    }else if(this.transform.x + this.renderer.width > global.viewport.width){
-      this.rb.applyForce([-1.2, 0]);
+    }else if(this.transform.position.x + this.renderer.width > global.viewport.width){
+      this.rb.applyForce(Vec2.left.scale(1.2));
       this.outOfBounds = true;
     }
 
-    if(this.transform.y < 0) {
-      this.rb.applyForce([0, 1.2]);
+    if(this.transform.position.y < 0) {
+      this.rb.applyForce(Vec2.down.scale(1.2));
       this.outOfBounds = true;
-    }else if(this.transform.y + this.renderer.height > global.viewport.height){
-      this.rb.applyForce([0, -1.2]);
+    }else if(this.transform.position.y + this.renderer.height > global.viewport.height){
+      this.rb.applyForce(Vec2.up.scale(1.2));
       this.outOfBounds = true;
     }
   }
 });
+registerScript(class EnemyController extends Script {
+  constructor() {
+    super();
+    this.player = null;
+    this.rb = null;
+  }
 
+  start() {
+    this.transform.position.x = Math.random() * global.viewport.width;
+    this.transform.position.y = Math.random() * global.viewport.height / 3;
+    this.player = Gameobject.findObjectByID("Player");
+    this.rb = this.getComponent("RigidBody");
+  }
+
+  update() {
+    var vec = this.transform.position.subtract(this.player.transform.position).reverse().scale(1.0/600);
+    this.rb.applyForce(vec);
+  }
+});
 registerScript(class EnemySpawner extends Script {
   constructor() {
     super();
@@ -55,7 +75,7 @@ registerScript(class EnemySpawner extends Script {
   }
 
   start() {
-    this.spawner = setTimeout(this.spawnEnemy, 1000);
+    this.spawner = setInterval(this.spawnEnemy, 1000);
   }
 
   spawnEnemy() {
@@ -73,6 +93,12 @@ registerPrefab('Enemy', {
         "width": 16,
         "height": 16
       }
+    },
+    {
+      "Entity": "EnemyController"
+    },
+    {
+      "Entity": "RigidBody"
     }
   ]
 });
@@ -202,3 +228,14 @@ defineRenderLayers({
 });
 
 SceneManager.loadScene('level1');
+
+
+
+Array.prototype.transform = function(transform) {
+  this.forEach(function(v, i, a) {
+    v = transform(v, i, a);
+  });
+}
+
+var poop = [1, 2, 3, 4, 5];
+poop.transform((v) => v + 5);

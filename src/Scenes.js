@@ -38,6 +38,8 @@ class SceneManager {
     });
 
     gameobject.start();
+
+    return gameobject;
   }
 
   static loadScene(config) {
@@ -70,6 +72,7 @@ class SceneManager {
         gameobject = nextLevel.local[0];
       } else {
         gameobject = new Gameobject();
+        // console.log(gameobject);
         SceneManager._IDs[jsonGameobject.ID] = gameobject;
         gameobject.class = jsonGameobject.Class;
 
@@ -98,14 +101,14 @@ class SceneManager {
       }
 
       if('x' in jsonGameobject)
-        gameobject.transform.x = jsonGameobject.x;
+        gameobject.transform.position.x = jsonGameobject.x;
       else
-        gameobject.transform.x = 0;
+        gameobject.transform.position.x = 0;
 
       if('y' in jsonGameobject)
-        gameobject.transform.y = jsonGameobject.y;
+        gameobject.transform.position.y = jsonGameobject.y;
       else
-        gameobject.transform.y = 0;
+        gameobject.transform.position.y = 0;
 
       //add the current gameobject to both our local and global scoped arrays
       result.local.push(gameobject);
