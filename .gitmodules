@@ -1,0 +1,3 @@
+[submodule "node-neural-network"]
+	path = node-neural-network
+	url = https://github.com/marcus13345/node-neural-network.git

@@ -229,13 +229,11 @@ defineRenderLayers({
 
 SceneManager.loadScene('level1');
 
-
-
-Array.prototype.transform = function(transform) {
-  this.forEach(function(v, i, a) {
-    v = transform(v, i, a);
-  });
-}
-
-var poop = [1, 2, 3, 4, 5];
-poop.transform((v) => v + 5);
+registerScript(
+  class GameManager extends Script {
+    constructor() {
+      super();
+      // this.
+    }
+  }
+);

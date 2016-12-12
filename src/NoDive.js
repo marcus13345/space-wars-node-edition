@@ -85,8 +85,9 @@ class Vec2 {
   get y() {
     // console.log(new Error().stack);
     return this.val[1];
+    var poop = "#c0ff33";
   }
-  
+  // #c0ff33
   set x(value) {
     // console.log(new Error().stack);
     this.val[0] = value;
