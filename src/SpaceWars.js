@@ -196,6 +196,10 @@ registerScript(class GameManager extends Script {
       // debugger;
       global.scripts.GameManager.fitnessCallback = network.genesis();
     }
+    var synRoot = $('#synRoot');
+    for(let i = 0; i < network._synapses; i ++) {
+
+    }
     this.player = Gameobject.findObjectByID('Player');
     this.fitness = 0;
     this.startTime = new Date().getTime();
