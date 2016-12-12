@@ -197,20 +197,22 @@ registerScript(class GameManager extends Script {
       global.scripts.GameManager.fitnessCallback = network.genesis();
     }
     var synRoot = $('#synRoot');
+    // var max = Math.max.apply(transform(network._synapses, (v)=>v.weight), null);
+    // console.log(max);
     for(let i = 0; i < network._synapses.length; i ++) {
       // console.log(synRoot.find("#syn" + i).length);
       var element;
       if((element = synRoot.find("#syn" + i)).length == 0) {
         // debugger;
         element = $(document.createElement('div'));
-        element.css('height', '3px');
+        element.css('height', '2px');
         element.css('opacity', '.5');
         element.attr('id', "syn" + i);
         synRoot.append(element);
       }
       var sign = network._synapses[i].weight / Math.abs(network._synapses[i].weight);
       element.css('background-color', sign > 0 ? 'blue' : 'red');
-      element.css('width', "" + (Math.abs(network._synapses[i].weight * 3)) + "px")
+      element.css('width', "" + (Math.abs(network._synapses[i].weight * 3)) + "px");
     }
     this.player = Gameobject.findObjectByID('Player');
     this.fitness = 0;
