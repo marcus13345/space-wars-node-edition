@@ -2,6 +2,7 @@
 
 var seedrandom = require('seedrandom');
 var random = seedrandom('hello.');
+var $ = require('jquery');
 
 registerScript(class PlayerController extends Script{
   constructor() {
@@ -148,52 +149,73 @@ registerScript(class GameManager extends Script {
   }
 
   start() {
-    var enemies = Gameobject.findObjectsByClass('Enemy');
-    for(let i = 0; i < enemies.length; i ++) {
-      var nnid = enemies[i].getComponent('NNID');
-      network.addInput(nnid.ID + '_X');
-      network.addInput(nnid.ID + '_Y');
+    if(!network._locked) {
+      var enemies = Gameobject.findObjectsByClass('Enemy');
+      for(let i = 0; i < enemies.length; i ++) {
+        var nnid = enemies[i].getComponent('NNID');
+        network.addInput(nnid.ID + '_X');
+        network.addInput(nnid.ID + '_Y');
+      }
+
+      network.addOutput("up", function() {
+        // console.log("up");
+        Keyboard.keys['W'.charCodeAt(0)] = true;
+        Keyboard.keys['A'.charCodeAt(0)] = false;
+        Keyboard.keys['S'.charCodeAt(0)] = false;
+        Keyboard.keys['D'.charCodeAt(0)] = false;
+      });
+      network.addOutput("left", function() {
+        // console.log("left");
+        Keyboard.keys['W'.charCodeAt(0)] = false;
+        Keyboard.keys['A'.charCodeAt(0)] = true;
+        Keyboard.keys['S'.charCodeAt(0)] = false;
+        Keyboard.keys['D'.charCodeAt(0)] = false;
+      });
+      network.addOutput("down", function() {
+        // console.log("down");
+        Keyboard.keys['W'.charCodeAt(0)] = false;
+        Keyboard.keys['A'.charCodeAt(0)] = false;
+        Keyboard.keys['S'.charCodeAt(0)] = true;
+        Keyboard.keys['D'.charCodeAt(0)] = false;
+      });
+      network.addOutput("right", function() {
+        // console.log("right");
+        Keyboard.keys['W'.charCodeAt(0)] = false;
+        Keyboard.keys['A'.charCodeAt(0)] = false;
+        Keyboard.keys['S'.charCodeAt(0)] = false;
+        Keyboard.keys['D'.charCodeAt(0)] = true;
+      });
+
+      // debugger;
+      global.scripts.GameManager.fitnessCallback = network.genesis();
     }
 
-    network.addOutput("up", function() {
-      // console.log("up");
-      Keyboard.keys['W'.charCodeAt(0)] = true;
-      Keyboard.keys['A'.charCodeAt(0)] = false;
-      Keyboard.keys['S'.charCodeAt(0)] = false;
-      Keyboard.keys['D'.charCodeAt(0)] = false;
-    });
-    network.addOutput("left", function() {
-      // console.log("left");
-      Keyboard.keys['W'.charCodeAt(0)] = false;
-      Keyboard.keys['A'.charCodeAt(0)] = true;
-      Keyboard.keys['S'.charCodeAt(0)] = false;
-      Keyboard.keys['D'.charCodeAt(0)] = false;
-    });
-    network.addOutput("down", function() {
-      // console.log("down");
-      Keyboard.keys['W'.charCodeAt(0)] = false;
-      Keyboard.keys['A'.charCodeAt(0)] = false;
-      Keyboard.keys['S'.charCodeAt(0)] = true;
-      Keyboard.keys['D'.charCodeAt(0)] = false;
-    });
-    network.addOutput("right", function() {
-      // console.log("right");
-      Keyboard.keys['W'.charCodeAt(0)] = false;
-      Keyboard.keys['A'.charCodeAt(0)] = false;
-      Keyboard.keys['S'.charCodeAt(0)] = false;
-      Keyboard.keys['D'.charCodeAt(0)] = true;
-    });
-
-    // debugger;
-    network.genesis();
+    this.fitness = 0;
+    this.startTime = new Date().getTime();
   }
 
   update() {
     network.predict();
+
+    this.fitness = (new Date().getTime() - this.startTime) / 1000;
+    this.fitness = this.fitness.toFixed(2);
+
+    $('#generation').html(network._generation);
+    $('#species').html(network._species);
+    $('#fitness').html(this.fitness);
   }
 
   static reset() {
-    random = seedrandom('hello.');
+    // console.log(global.scripts.GameManager.fitnessCallback);
+    if(global.scripts.GameManager.fitnessCallback !== undefined)
+      global.scripts.GameManager.fitnessCallback.apply(network, [global.scripts.GameManager.fitness]);
+    random = seedrandom('systematic love');
+    if(network._species == 19) {
+      global.scripts.GameManager.fitnessCallback = network.generation();
+    }else{
+      global.scripts.GameManager.fitnessCallback = network.species();
+    }
+    // console.log(global.scripts.GameManager);
     SceneManager.loadScene('neuralNetwork');
   }
 
@@ -505,6 +527,6 @@ defineRenderLayers({
 });
 
 
-var network = new BiologicalNeuralNetwork(10, 5, 20);
+var network = new BiologicalNeuralNetwork(10, 5);
 
 SceneManager.loadScene('neuralNetwork');
