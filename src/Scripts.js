@@ -132,8 +132,48 @@ registerScript(class RigidBody extends Script {
 registerScript(class BoxCollider extends Script{
   constructor() {
     super();
-    console.log(this);
+    // console.log(this);
+    this.width = 0;
+    this.height = 0;
+    this.xoff = 0;
+    this.yoff = 0;
   }
 
+  start() {
+    if(!('colliders' in global))
+      global.colliders = [];
 
+    global.colliders.push(this);
+  }
+
+  get x() {
+    return this.gameobject.transform.position.x + this.xoff;
+  }
+
+  get y() {
+    return this.gameobject.transform.position.y + this.yoff;
+  }
+
+  update() {
+    for(let i = 0; i < global.colliders.length; i ++) {
+
+      //basically copy pasta from MDN
+      var rect1 = {x: global.colliders[i].x, y: global.colliders[i].y, width: global.colliders[i].width, height: global.colliders[i].height};
+      var rect2 = {x: this.x, y: this.y, width: this.width, height: this.height};
+
+      // console.log(rect1, rect2);
+
+      if (rect1.x < rect2.x + rect2.width && rect1.x + rect1.width > rect2.x &&
+        rect1.y < rect2.y + rect2.height && rect1.height + rect1.y > rect2.y && global.colliders[i] != this) {
+
+        //this just SEEMS like a good idea, idk
+        setTimeout(() => {
+          // console.log("A THING");
+          this.gameobject.collision(global.colliders[i]);
+          global.colliders[i].gameobject.collision(this);
+        }, 0);
+
+      }
+    }
+  }
 });

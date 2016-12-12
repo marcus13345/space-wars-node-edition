@@ -48,6 +48,13 @@ class Gameobject {
     });
   }
 
+  collision(collider) {
+    this._scripts.forEach( (script) => {
+      if('start' in script)
+        script.collision(collider);
+    });
+  }
+
   update() {
     this._scripts.forEach( (script) => {
       if('update' in script)

@@ -59,6 +59,7 @@ class SceneManager {
     });
     SceneManager._IDs = [];
     SceneManager._classTable = [];
+    global.colliders = [];
 
 
     config = global.scenes[config];

@@ -50,6 +50,10 @@ registerScript(class PlayerController extends Script{
       this.outOfBounds = true;
     }
   }
+
+  collision(other) {
+    scripts.GameManager.reset();
+  }
 });
 registerScript(class EnemyController extends Script {
   constructor() {
@@ -153,9 +157,13 @@ registerScript(class GameManager extends Script {
       var enemies = Gameobject.findObjectsByClass('Enemy');
       for(let i = 0; i < enemies.length; i ++) {
         var nnid = enemies[i].getComponent('NNID');
-        network.addInput(nnid.ID + '_X');
-        network.addInput(nnid.ID + '_Y');
+        network.addInput('Player_X');
+        network.addInput('Player_Y');
       }
+
+
+      network.addInput(nnid.ID + '_X');
+      network.addInput(nnid.ID + '_Y');
 
       network.addOutput("up", function() {
         // console.log("up");
@@ -189,12 +197,16 @@ registerScript(class GameManager extends Script {
       // debugger;
       global.scripts.GameManager.fitnessCallback = network.genesis();
     }
-
+    this.player = Gameobject.findObjectByID('Player');
     this.fitness = 0;
     this.startTime = new Date().getTime();
   }
 
   update() {
+    network.addInput('Player_X');
+    network.addInput('Player_Y');
+    network.changeInput('Player_X', player.transform.position.x / global.viewport.width);
+    network.changeInput('Player_Y', player.transform.position.y / global.viewport.height);
     network.predict();
 
     this.fitness = (new Date().getTime() - this.startTime) / 1000;
@@ -289,6 +301,13 @@ registerPrefab('Player', { // the player
       "Entity": 'PlayerController',
       "Properties": {
 
+      }
+    },
+    {
+      "Entity": "BoxCollider",
+      "Properties": {
+        "width": 16,
+        "height": 16
       }
     }
   ]
@@ -394,6 +413,13 @@ registerScene('neuralNetwork', [
         "Properties" :{
           "ID": "Alpha"
         }
+      },
+      {
+        "Entity": "BoxCollider",
+        "Properties": {
+          "width": 16,
+          "height": 16
+        }
       }
     ]
   },
@@ -426,6 +452,13 @@ registerScene('neuralNetwork', [
         "Properties" :{
           "ID": "Beta"
         }
+      },
+      {
+        "Entity": "BoxCollider",
+        "Properties": {
+          "width": 16,
+          "height": 16
+        }
       }
     ]
   },
@@ -457,6 +490,13 @@ registerScene('neuralNetwork', [
         "Entity": "NNID",
         "Properties" :{
           "ID": "Omega"
+        }
+      },
+      {
+        "Entity": "BoxCollider",
+        "Properties": {
+          "width": 16,
+          "height": 16
         }
       }
     ]
@@ -527,6 +567,6 @@ defineRenderLayers({
 });
 
 
-var network = new BiologicalNeuralNetwork(10, 5);
+var network = new BiologicalNeuralNetwork(14, 5);
 
 SceneManager.loadScene('neuralNetwork');
