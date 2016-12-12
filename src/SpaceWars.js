@@ -54,18 +54,73 @@ registerScript(class EnemyController extends Script {
     super();
     this.player = null;
     this.rb = null;
+    this.rx = 0;
+    this.ry = 0;
+    this.debug = false;
+    this.graphics = null;
+    this.renderLayer = "Default";
+    this.handicap = 1;
   }
 
   start() {
+    this.player = Gameobject.findObjectByID("Player");
+    this.randomizeRPos();
+    this.rb = this.getComponent("RigidBody");
+    this.interval(this.randomizeRPos, (Math.random() * 1000) + 500);
+    if(this.debug) {
+      var renderer = this.getComponent('RectRenderer');
+      if(renderer !== null) {
+        this.graphics = new PIXI.Graphics();
+        var color, colormethod = 0;
+        if(colormethod == 0) {
+          var colors = [
+            ((renderer.color >> 0) & 0xFF0000) | ((renderer.color >> -8) & 0x00FF00) | ((renderer.color >> 8) & 0x0000FF),
+            ((renderer.color >> -16) & 0xFF0000) | ((renderer.color >> 0) & 0x00FF00) | ((renderer.color >> 16) & 0x0000FF),
+            ((renderer.color >> -16) & 0xFF0000) | ((renderer.color >> 8) & 0x00FF00) | ((renderer.color >> 8) & 0x0000FF),
+            ((renderer.color >> -8) & 0xFF0000) | ((renderer.color >> 8) & 0x00FF00) | ((renderer.color >> 0) & 0x0000FF),
+            ((renderer.color >> -8) & 0xFF0000) | ((renderer.color >> -8) & 0x00FF00) | ((renderer.color >> 16) & 0x0000FF)
+          ];
+          color = colors[Math.floor(Math.random() * colors.length)];
+        }else if(colormethod == 1) {
+          var shifts = [0, 8, 16];
+          color = ((renderer.color >> -shifts[Math.floor(Math.random() * 3)]) & 0xFF0000) |
+                  ((renderer.color >> (shifts[Math.floor(Math.random() * 3)] - 8)) & 0x00FF00) |
+                  ((renderer.color >> shifts[Math.floor(Math.random() * 3)]) & 0x0000FF);
+        }
+
+        this.graphics.lineStyle(2, color);
+        this.graphics.moveTo(0, 0);
+        this.graphics.lineTo(10, 0);
+        SceneManager.stage.addChild(this.graphics);
+        this.graphics.renderer = this;
+      }
+    }
+  }
+
+  randomizeRPos() {
+    // console.log("randomizing");
+    this.rx = this.player.transform.position.x + Math.diomgis(Math.random()) * 60;
+    this.ry = this.player.transform.position.y + Math.diomgis(Math.random()) * 60;
+    this.handicap = Math.random() * (9/10) + .1;
+    // console.log(this);
+  }
+
+  randomizePosition() {
     this.transform.position.x = Math.random() * global.viewport.width;
     this.transform.position.y = Math.random() * global.viewport.height / 3;
-    this.player = Gameobject.findObjectByID("Player");
-    this.rb = this.getComponent("RigidBody");
   }
 
   update() {
-    var vec = this.transform.position.subtract(this.player.transform.position).reverse().scale(1.0/600);
+    var vec = this.transform.position.subtract((new Vec2(this.rx, this.ry))).reverse().scale(1.0/600).scale(this.handicap);
     this.rb.applyForce(vec);
+
+    // this.graphics.moveTo(0, 0);
+    // this.graphics.lineTo(this.rx, this.ry);
+    // console.log(this.rx);
+    this.graphics.scale.x = this.rx/1000;
+    this.graphics.scale.y = this.ry/1000;
+    this.graphics.x = this.gameobject.transform.position.x;
+    this.graphics.y = this.gameobject.transform.position.y;
   }
 });
 registerScript(class EnemySpawner extends Script {
@@ -75,11 +130,13 @@ registerScript(class EnemySpawner extends Script {
   }
 
   start() {
-    this.spawner = setInterval(this.spawnEnemy, 1000);
+    this.spawner = this.interval(this.spawnEnemy, 1000);
   }
 
   spawnEnemy() {
-    SceneManager.loadPrefab("Enemy");
+    var enemy = SceneManager.loadPrefab("Enemy");
+    var controller = enemy.getComponent('EnemyController');
+    controller.randomizePosition();
   }
 });
 
@@ -89,16 +146,52 @@ registerPrefab('Enemy', {
     {
       "Entity": "RectRenderer",
       "Properties": {
-        "color": 0xFF7711,
+        "color": 0xFF3311,
         "width": 16,
         "height": 16
       }
     },
     {
-      "Entity": "EnemyController"
+      "Entity": "EnemyController",
+      "Properties": {
+        "debug": true
+      }
     },
     {
-      "Entity": "RigidBody"
+      "Entity": "RigidBody",
+      "Properties" :{
+        "terminalVelocity": 10
+      }
+    }
+  ]
+});
+registerPrefab('Player', { // the player
+  "Entity": "GameObject", //regular gameobject, nothing amazing. where you would place a prefab name.
+  "Name": "Player",
+  "ID": "Player",
+  "Class": [],
+  "x": 631,
+  "y": 740,
+  "Scripts": [ //self explanitory
+    {
+      "Entity": "RectRenderer", //this one puts a rectangle on the screen
+      "Properties": { //with properties
+        "width": 16,
+        "height": 16,
+        "color": 0xC0FF33//0x0af9c7
+      }
+    },
+    {
+      "Entity": 'RigidBody',
+      "Properties": {
+        'dy': -15
+      }
+    },
+    {
+      "Entity": 'PlayerController',
+      "Properties": {
+
+      }
     }
   ]
 });
@@ -123,35 +216,8 @@ registerScene('level1', [
       }
     ]
   },
-  { // the player
-    "Entity": "GameObject", //regular gameobject, nothing amazing. where you would place a prefab name.
-    "Name": "Player",
-    "ID": "Player",
-    "Class": [],
-    "x": 631,
-    "y": 740,
-    "Scripts": [ //self explanitory
-      {
-        "Entity": "RectRenderer", //this one puts a rectangle on the screen
-        "Properties": { //with properties
-          "width": 16,
-          "height": 16,
-          "color": 0x0af9c7
-        }
-      },
-      {
-        "Entity": 'RigidBody',
-        "Properties": {
-          'dy': -15
-        }
-      },
-      {
-        "Entity": 'PlayerController',
-        "Properties": {
-
-        }
-      }
-    ]
+  {
+    "Entity": "Player"
   },
   { //this is a gameobject
     "Entity": "gameobject", //regular gameobject, nothing amazing. where you would place a prefab name.
@@ -228,7 +294,6 @@ defineRenderLayers({
 });
 
 SceneManager.loadScene('level1');
-
 registerScript(
   class GameManager extends Script {
     constructor() {

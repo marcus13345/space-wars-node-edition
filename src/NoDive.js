@@ -2,9 +2,27 @@
 
 const ipcRenderer = require('electron').ipcRenderer;
 
+var paused = false;
+var speed = 1;
+
+Math.sigmoid = function(t) {
+  return 1/(1+Math.pow(Math.E, -t));
+};
+
+Math.diomgis = function(t) {
+  return -Math.log(((1/t)-1));
+}
+
 window.addEventListener('keydown', function(e) {
-  if (e.key == 'r')
     ipcRenderer.send('asynchronous-message', 'ping');
+  if (e.key == 'p' || e.key == 'P')
+    paused = !paused
+  if (e.key == '1')
+    speed = 1;
+  if (e.key == '2')
+    speed = 2;
+  if (e.key == '3')
+    speed = 3;
 });
 
 var graphics;
@@ -34,22 +52,33 @@ window.onload = () => {
 };
 
 function gameloop() {
-  requestAnimationFrame(gameloop);
+  if(speed == 1)
+    requestAnimationFrame(gameloop);
 
-  SceneManager.stage.children.sort((a, b) => {
-    var c = SceneManager.getLayerDepth(a.renderer.renderLayer),
+  if(!paused) {
+    if(speed != 3) {
+      SceneManager.stage.children.sort((a, b) => {
+        var c = SceneManager.getLayerDepth(a.renderer.renderLayer),
         d = SceneManager.getLayerDepth(b.renderer.renderLayer);
 
-    if(c == d) return 0;
-    else if(c > d) return 1;
-    else return -1;
-  });
-  SceneManager.scene.forEach((value) => {
-    if('update' in value)
-      value.update();
-  });
+        if(c == d) return 0;
+        else if(c > d) return 1;
+        else return -1;
+      });
+    }
 
-  renderer.render(SceneManager.stage);
+    SceneManager.scene.forEach((value) => {
+      if('update' in value)
+      value.update();
+    });
+
+    if(speed != 3)
+      renderer.render(SceneManager.stage);
+  }
+
+
+  if(speed != 1)
+    setTimeout(gameloop, 0);
 }
 
 var Keyboard = {
@@ -72,6 +101,10 @@ class Vec2 {
     return new Vec2(this.x - vec.x, this.y - vec.y);
   }
 
+  add(vec) {
+    return new Vec2(this.x + vec.x, this.y + vec.y);
+  }
+
   scale(factor) {
     // console.log(factor, this.x, this.y);
     return new Vec2(this.x * factor, this.y * factor);
@@ -85,9 +118,8 @@ class Vec2 {
   get y() {
     // console.log(new Error().stack);
     return this.val[1];
-    var poop = "#c0ff33";
   }
-  // #c0ff33
+  
   set x(value) {
     // console.log(new Error().stack);
     this.val[0] = value;
@@ -116,5 +148,9 @@ class Vec2 {
 
   reverse() {
     return new Vec2(-this.x, -this.y);
+  }
+
+  static distance(u, v) {
+    return Math.sqrt(Math.pow(u.x-v.x, 2) + Math.pow(u.y-v.y, 2));
   }
 }
