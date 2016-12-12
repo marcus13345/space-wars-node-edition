@@ -1,7 +1,18 @@
 /* jshint esversion: 6 */
 
 class Script {
-  constructor() {}
+  constructor() {
+    this.timers = [];
+  }
+
+  interval(fun, time) {
+    var _return = setInterval(()=> {
+      if(!paused)
+        fun.call(this);
+    }, time)
+    this.timers.push(_return);
+    return _return;
+  }
 
   getComponent(type) {
     return this.gameobject.getComponent(type);
@@ -112,3 +123,12 @@ registerScript(
     }
   }
 ); // RigidBody
+
+registerScript(
+  class BoxCollider extends Script{
+    constructor() {
+      super();
+      console.log(this);
+    }
+  }
+)

@@ -90,9 +90,11 @@ class SceneManager {
             gameobject.addScript(scriptObject);
 
             // go over the properties in the config
+            // console.log("=========" + jsonScript.Entity);
             for(var value in jsonScript.Properties) {
               if(jsonScript.Properties.hasOwnProperty(value))
                 // and set them on the script
+                // console.log(value + ": " + jsonScript.Properties[value]);
                 scriptObject[value] = jsonScript.Properties[value];
             }
             //scriptObject
@@ -102,12 +104,12 @@ class SceneManager {
 
       if('x' in jsonGameobject)
         gameobject.transform.position.x = jsonGameobject.x;
-      else
+      else if(gameobject.transform.position.x === undefined)
         gameobject.transform.position.x = 0;
 
       if('y' in jsonGameobject)
         gameobject.transform.position.y = jsonGameobject.y;
-      else
+      else if(gameobject.transform.position.y === undefined)
         gameobject.transform.position.y = 0;
 
       //add the current gameobject to both our local and global scoped arrays
