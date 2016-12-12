@@ -50,7 +50,7 @@ class Gameobject {
 
   collision(collider) {
     this._scripts.forEach( (script) => {
-      if('start' in script)
+      if('collision' in script)
         script.collision(collider);
     });
   }

@@ -157,13 +157,12 @@ registerScript(class GameManager extends Script {
       var enemies = Gameobject.findObjectsByClass('Enemy');
       for(let i = 0; i < enemies.length; i ++) {
         var nnid = enemies[i].getComponent('NNID');
-        network.addInput('Player_X');
-        network.addInput('Player_Y');
+        network.addInput(nnid.ID + '_X');
+        network.addInput(nnid.ID + '_Y');
       }
 
-
-      network.addInput(nnid.ID + '_X');
-      network.addInput(nnid.ID + '_Y');
+      network.addInput('Player_X');
+      network.addInput('Player_Y');
 
       network.addOutput("up", function() {
         // console.log("up");
@@ -203,10 +202,8 @@ registerScript(class GameManager extends Script {
   }
 
   update() {
-    network.addInput('Player_X');
-    network.addInput('Player_Y');
-    network.changeInput('Player_X', player.transform.position.x / global.viewport.width);
-    network.changeInput('Player_Y', player.transform.position.y / global.viewport.height);
+    // network.changeInput('Player_X', this.player.transform.position.x / global.viewport.width);
+    // network.changeInput('Player_Y', this.player.transform.position.y / global.viewport.height);
     network.predict();
 
     this.fitness = (new Date().getTime() - this.startTime) / 1000;
