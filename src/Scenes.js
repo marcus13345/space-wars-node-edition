@@ -18,6 +18,10 @@ class SceneManager {
     return SceneManager._IDs;
   }
 
+  static get ClassTable() {
+    return this._classTable;
+  }
+
   static loadPrefab(prefab, parent) {
     var parsedObject = SceneManager.parseScene([{
       "Entity": prefab
@@ -44,8 +48,20 @@ class SceneManager {
 
   static loadScene(config) {
     //if this is a strign reference to a scene we already loaded, load that.
-    if(typeof(config) === 'string')
-      config = global.scenes[config];
+    if(!(config in global.scenes))
+      console.error("Scene " + config + " does not exist, Aborting!");
+
+    //destroy the old shit
+    SceneManager._scene.forEach((go) => {
+      go.scripts.forEach( (script) => {
+        script.destroy();
+      });
+    });
+    SceneManager._IDs = [];
+    SceneManager._classTable = [];
+
+
+    config = global.scenes[config];
     SceneManager._scene = SceneManager.parseScene(config, null).global;
     SceneManager._scene.forEach((go) => {
       go.scripts.forEach( (script) => {
@@ -74,13 +90,29 @@ class SceneManager {
         gameobject = new Gameobject();
         // console.log(gameobject);
         SceneManager._IDs[jsonGameobject.ID] = gameobject;
+        if('Class' in jsonGameobject) {
+          // console.log(jsonGameobject.Class);
+          for(let i = 0; i < jsonGameobject.Class.length; i ++) {
+            if (jsonGameobject.Class[i] in this._classTable) {
+              this._classTable[jsonGameobject.Class[i]].push(gameobject);
+            }else {
+              this._classTable[jsonGameobject.Class[i]] = [ gameobject ];
+            }
+            // console.log(this._classTable[jsonGameobject.Class[i]]);
+          }
+        }
         gameobject.class = jsonGameobject.Class;
 
         if('Scripts' in jsonGameobject)
           //for each script in config
           jsonGameobject.Scripts.forEach( (jsonScript) => {
             //make the script object
-            var scriptObject = new global.scripts[jsonScript.Entity]();
+            var scriptObject = new Script();
+            if(jsonScript.Entity in global.scripts)
+              scriptObject = new global.scripts[jsonScript.Entity]();
+            else
+              console.warn("Script " + jsonScript.Entity + " does not exist!");
+
 
             //inject some data
             scriptObject.transform = gameobject.transform;
@@ -131,6 +163,7 @@ class SceneManager {
     SceneManager._scene = [];
     SceneManager._stage = new PIXI.Container();
     SceneManager._IDs = {};
+    SceneManager._classTable = {};
   }
 }
 SceneManager.self = new SceneManager();

@@ -1,6 +1,7 @@
 /* jshint esversion: 6 */
 
-
+var seedrandom = require('seedrandom');
+var random = seedrandom('hello.');
 
 registerScript(class PlayerController extends Script{
   constructor() {
@@ -66,7 +67,7 @@ registerScript(class EnemyController extends Script {
     this.player = Gameobject.findObjectByID("Player");
     this.randomizeRPos();
     this.rb = this.getComponent("RigidBody");
-    this.interval(this.randomizeRPos, (Math.random() * 1000) + 500);
+    this.interval(this.randomizeRPos, (random() * 1000) + 500);
     if(this.debug) {
       var renderer = this.getComponent('RectRenderer');
       if(renderer !== null) {
@@ -80,12 +81,12 @@ registerScript(class EnemyController extends Script {
             ((renderer.color >> -8) & 0xFF0000) | ((renderer.color >> 8) & 0x00FF00) | ((renderer.color >> 0) & 0x0000FF),
             ((renderer.color >> -8) & 0xFF0000) | ((renderer.color >> -8) & 0x00FF00) | ((renderer.color >> 16) & 0x0000FF)
           ];
-          color = colors[Math.floor(Math.random() * colors.length)];
+          color = colors[Math.floor(random() * colors.length)];
         }else if(colormethod == 1) {
           var shifts = [0, 8, 16];
-          color = ((renderer.color >> -shifts[Math.floor(Math.random() * 3)]) & 0xFF0000) |
-                  ((renderer.color >> (shifts[Math.floor(Math.random() * 3)] - 8)) & 0x00FF00) |
-                  ((renderer.color >> shifts[Math.floor(Math.random() * 3)]) & 0x0000FF);
+          color = ((renderer.color >> -shifts[Math.floor(random() * 3)]) & 0xFF0000) |
+                  ((renderer.color >> (shifts[Math.floor(random() * 3)] - 8)) & 0x00FF00) |
+                  ((renderer.color >> shifts[Math.floor(random() * 3)]) & 0x0000FF);
         }
 
         this.graphics.lineStyle(2, color);
@@ -99,15 +100,15 @@ registerScript(class EnemyController extends Script {
 
   randomizeRPos() {
     // console.log("randomizing");
-    this.rx = this.player.transform.position.x + Math.diomgis(Math.random()) * 60;
-    this.ry = this.player.transform.position.y + Math.diomgis(Math.random()) * 60;
-    this.handicap = Math.random() * (9/10) + .1;
+    this.rx = this.player.transform.position.x + Math.diomgis(random()) * 60;
+    this.ry = this.player.transform.position.y + Math.diomgis(random()) * 60;
+    this.handicap = random() * (9/10) + .1;
     // console.log(this);
   }
 
   randomizePosition() {
-    this.transform.position.x = Math.random() * global.viewport.width;
-    this.transform.position.y = Math.random() * global.viewport.height / 3;
+    this.transform.position.x = random() * global.viewport.width;
+    this.transform.position.y = random() * global.viewport.height / 3;
   }
 
   update() {
@@ -139,9 +140,84 @@ registerScript(class EnemySpawner extends Script {
     controller.randomizePosition();
   }
 });
+registerScript(class GameManager extends Script {
+  constructor() {
+    super();
+    GameManager.self = this;
+    this.player = Gameobject.findObjectByID('Player');
+  }
+
+  start() {
+    var enemies = Gameobject.findObjectsByClass('Enemy');
+    for(let i = 0; i < enemies.length; i ++) {
+      var nnid = enemies[i].getComponent('NNID');
+      network.addInput(nnid.ID + '_X');
+      network.addInput(nnid.ID + '_Y');
+    }
+
+    network.addOutput("up", function() {
+      // console.log("up");
+      Keyboard.keys['W'.charCodeAt(0)] = true;
+      Keyboard.keys['A'.charCodeAt(0)] = false;
+      Keyboard.keys['S'.charCodeAt(0)] = false;
+      Keyboard.keys['D'.charCodeAt(0)] = false;
+    });
+    network.addOutput("left", function() {
+      // console.log("left");
+      Keyboard.keys['W'.charCodeAt(0)] = false;
+      Keyboard.keys['A'.charCodeAt(0)] = true;
+      Keyboard.keys['S'.charCodeAt(0)] = false;
+      Keyboard.keys['D'.charCodeAt(0)] = false;
+    });
+    network.addOutput("down", function() {
+      // console.log("down");
+      Keyboard.keys['W'.charCodeAt(0)] = false;
+      Keyboard.keys['A'.charCodeAt(0)] = false;
+      Keyboard.keys['S'.charCodeAt(0)] = true;
+      Keyboard.keys['D'.charCodeAt(0)] = false;
+    });
+    network.addOutput("right", function() {
+      // console.log("right");
+      Keyboard.keys['W'.charCodeAt(0)] = false;
+      Keyboard.keys['A'.charCodeAt(0)] = false;
+      Keyboard.keys['S'.charCodeAt(0)] = false;
+      Keyboard.keys['D'.charCodeAt(0)] = true;
+    });
+
+    // debugger;
+    network.genesis();
+  }
+
+  update() {
+    network.predict();
+  }
+
+  static reset() {
+    random = seedrandom('hello.');
+    SceneManager.loadScene('neuralNetwork');
+  }
+
+  get enemies() {
+    Gameobject.findObjectsByClass('Enemy');
+  }
+});
+registerScript(class NNID extends Script {
+  constructor() {
+    super();
+  }
+
+  start() {
+  }
+
+  update() {
+    network.changeInput(this.ID + '_X', this.transform.position.x / global.viewport.width);
+    network.changeInput(this.ID + '_Y', this.transform.position.y / global.viewport.height);
+  }
+});
 
 registerPrefab('Enemy', {
   "Entity": "Gameobject",
+  "Class": ['Enemy'],
   "Scripts": [
     {
       "Entity": "RectRenderer",
@@ -195,6 +271,15 @@ registerPrefab('Player', { // the player
     }
   ]
 });
+registerPrefab('GameManager', {
+  "Entity": "GameObject",
+  "ID": "GameManager",
+  "Scripts": [
+    {
+      "Entity": "GameManager"
+    }
+  ]
+});
 
 registerScene('level1', [
   { // the background
@@ -225,6 +310,132 @@ registerScene('level1', [
     "Scripts": [
       {
         "Entity": "EnemySpawner"
+      }
+    ]
+  },
+  {
+    "Entity": "GameManager"
+  }
+]);
+registerScene('neuralNetwork', [
+  { // the background
+    "Entity": "GameObject", //regular gameobject, nothing amazing. where you would place a prefab name.
+    "Name": "Background",
+    "ID": "Background",
+    "Class": [],
+    "x": 0,
+    "y": 0,
+    "Scripts": [ //self explanitory
+      {
+        "Entity": "SpriteRenderer", //this one puts a rectangle on the screen
+        "Properties": { //with properties
+          // "url": "http://wallpaperstyle.com/web/wallpapers/hot-girl/1280x720.jpg",
+          "url": "http://wallpapercave.com/wp/6K44j5E.jpg",
+          "color": 0x333333,
+          "renderLayer": "Background"
+        }
+      }
+    ]
+  },
+  {
+    "Entity": "Player"
+  },
+  {
+    "Entity": "GameManager"
+  },
+  {
+    "Entity": "Gameobject",
+    "Class": ['Enemy'],
+    "Scripts": [
+      {
+        "Entity": "RectRenderer",
+        "Properties": {
+          "color": 0xfb69a3,
+          "width": 16,
+          "height": 16
+        }
+      },
+      {
+        "Entity": "EnemyController",
+        "Properties": {
+          "debug": true
+        }
+      },
+      {
+        "Entity": "RigidBody",
+        "Properties" :{
+          "terminalVelocity": 10
+        }
+      },
+      {
+        "Entity": "NNID",
+        "Properties" :{
+          "ID": "Alpha"
+        }
+      }
+    ]
+  },
+  {
+    "Entity": "Gameobject",
+    "Class": ['Enemy'],
+    "Scripts": [
+      {
+        "Entity": "RectRenderer",
+        "Properties": {
+          "color": 0x69a3fb,
+          "width": 16,
+          "height": 16
+        }
+      },
+      {
+        "Entity": "EnemyController",
+        "Properties": {
+          "debug": true
+        }
+      },
+      {
+        "Entity": "RigidBody",
+        "Properties" :{
+          "terminalVelocity": 10
+        }
+      },
+      {
+        "Entity": "NNID",
+        "Properties" :{
+          "ID": "Beta"
+        }
+      }
+    ]
+  },
+  {
+    "Entity": "Gameobject",
+    "Class": ['Enemy'],
+    "Scripts": [
+      {
+        "Entity": "RectRenderer",
+        "Properties": {
+          "color": 0xc169fb,
+          "width": 16,
+          "height": 16
+        }
+      },
+      {
+        "Entity": "EnemyController",
+        "Properties": {
+          "debug": true
+        }
+      },
+      {
+        "Entity": "RigidBody",
+        "Properties" :{
+          "terminalVelocity": 10
+        }
+      },
+      {
+        "Entity": "NNID",
+        "Properties" :{
+          "ID": "Omega"
+        }
       }
     ]
   }
@@ -293,12 +504,7 @@ defineRenderLayers({
   "Entities": 2
 });
 
-SceneManager.loadScene('level1');
-registerScript(
-  class GameManager extends Script {
-    constructor() {
-      super();
-      // this.
-    }
-  }
-);
+
+var network = new BiologicalNeuralNetwork(10, 5, 20);
+
+SceneManager.loadScene('neuralNetwork');

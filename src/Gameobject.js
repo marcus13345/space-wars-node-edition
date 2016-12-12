@@ -34,6 +34,13 @@ class Gameobject {
     else return null;
   }
 
+  static findObjectsByClass(className) {
+    // console.log(className, SceneManager.ClassTable);
+    if(className in SceneManager.ClassTable)
+      return SceneManager.ClassTable[className];
+    else return null;
+  }
+
   start() {
     this._scripts.forEach( (script) => {
       if('start' in script)

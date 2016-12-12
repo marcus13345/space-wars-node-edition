@@ -14,6 +14,7 @@ Math.diomgis = function(t) {
 }
 
 window.addEventListener('keydown', function(e) {
+  if (e.key == 'r' || e.key == 'R')
     ipcRenderer.send('asynchronous-message', 'ping');
   if (e.key == 'p' || e.key == 'P')
     paused = !paused
@@ -119,7 +120,7 @@ class Vec2 {
     // console.log(new Error().stack);
     return this.val[1];
   }
-  
+
   set x(value) {
     // console.log(new Error().stack);
     this.val[0] = value;

@@ -5,6 +5,18 @@ class Script {
     this.timers = [];
   }
 
+  destroy() {
+    for(let i = 0; i < this.timers.length; i ++) {
+      clearInterval(this.timers[i]);
+    }
+    if('graphics' in this) {
+      // console.log(SceneManager.stage);
+      while (SceneManager.stage.children.length > 0) {
+        SceneManager.stage.removeChild(SceneManager.stage.children[0]);
+      };
+    }
+  }
+
   interval(fun, time) {
     var _return = setInterval(()=> {
       if(!paused)
